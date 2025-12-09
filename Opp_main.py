@@ -1,7 +1,13 @@
 import customtkinter as ctk
 import threading
+import time
 import queue
+import numpy as np
+import pyaudio
+import torch
 from motor_ia import MotorIA # un llamado a la clase que maneja el audio y la IA, para que el codigo sea mas limpio
+from modulo_traduccion import Traductor  
+from transformers import MarianMTModel, MarianTokenizer
 
 #la configuracion de la parte visual
 ctk.set_appearance_mode("Dark")

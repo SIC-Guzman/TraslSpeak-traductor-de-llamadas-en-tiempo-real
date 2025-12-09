@@ -2,6 +2,7 @@ import pyaudio
 import numpy as np
 import torch    
 from faster_whisper import WhisperModel
+from transformers import MarianMTModel, MarianTokenizer
 
 #la parte de la configuracion del audio
 MODEL_SIZE = "tiny"
@@ -22,6 +23,13 @@ vad_model, vad_utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
 #vamos a cargar el modelo de faster-whisper
 
 Whipser_Mod = WhisperModel(MODEL_SIZE, device="cpu", compute_type=COMPUTE_TYPE)
+
+#Cargamos el modelo de Traducción
+print("Cargando traductor MarianMT (Español -> Inglés)...")
+nombre_modelo = "Helsinki-NLP/opus-mt-es-en"
+tokenizer = MarianTokenizer.from_pretrained(nombre_modelo)
+modelo_traduccion = MarianMTModel.from_pretrained(nombre_modelo)
+# -----------------------------------------------------------
 
 #probamos el microfono
 print("modelos cargados, iniciando audio...")
@@ -84,7 +92,21 @@ try:
 
             #resultado final
             print(f"\rTranscripcion: , {texto_final}\n")
-
+            
+            # Traducción
+            if texto_final.strip():
+                try:
+                    # Tokenizar
+                    inputs = tokenizer(texto_final, return_tensors="pt", padding=True)
+                    # Generar traducción
+                    translated = modelo_traduccion.generate(**inputs)
+                    # Decodificar
+                    texto_traducido = tokenizer.decode(translated[0], skip_special_tokens=True)
+                    
+                    print(f"Traduccion (EN): {texto_traducido}\n")
+                except Exception as e:
+                    print(f"Error traduciendo: {e}")
+            
             #resetamos para la siguiente frase
             BufferAudio = []
             voz_Activa = False
