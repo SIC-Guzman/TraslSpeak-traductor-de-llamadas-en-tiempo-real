@@ -3,7 +3,7 @@
 
 ## 🌟 Nuestra visión
 
-**TraslPeak** es un traductor de voz en tiempo real diseñado para operar de manera **completamente automática, dentro de plataformas de videollamadas (Zoom, Meet, Teams, WhatsApp, etc). Utiliza redes neuronales locales (`FasterWhisper`) y la API de traducción de Google para ofrecer una comunicación fluida, separando la voz del usuario del audio de la llamada mediante cables virtuales.
+**TraslPeak** es un traductor de voz en tiempo real diseñado para operar de manera completamente automática, dentro de plataformas de videollamadas (Zoom, Meet, Teams, WhatsApp, etc). Utiliza redes neuronales locales (`FasterWhisper`) y la API de traducción de Google para ofrecer una comunicación fluida, separando la voz del usuario del audio de la llamada mediante cables virtuales.
 
 -----
 
