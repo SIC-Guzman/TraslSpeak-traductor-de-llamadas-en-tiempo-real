@@ -47,12 +47,12 @@ class HandsFreeApp(ctk.CTk):
         self.user_volume = 0
         self.other_volume = 0
 
-        self.title("TraslSpeak ProMAX V22 - TURBO") 
+        self.title("TraslSpeak Pro") 
         self.geometry("1200x950")
         self.configure(fg_color="#D9F2FF") 
 
         # TÍTULO
-        self.label_title = ctk.CTkLabel(self, text="🗣️ TraslSpeak ProMAX", font=("Arial Bold", 32), text_color="#006699")
+        self.label_title = ctk.CTkLabel(self, text="🗣️ TraslSpeak Pro", font=("Arial Bold", 32), text_color="#006699")
         self.label_title.pack(pady=(15, 5))
         
         # --- CAJA DE VOZ ÚNICA (CENTRADA V19) ---
