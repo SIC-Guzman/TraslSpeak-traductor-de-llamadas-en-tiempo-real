@@ -54,11 +54,11 @@ class HandsFreeApp(ctk.CTk):
         self.user_volume = 0
         self.other_volume = 0
 
-        self.title("TraslSpeak ProMAX - ULTRASONIC") 
+        self.title("TraslSpeak Pro") 
         self.geometry("1200x950")
         self.configure(fg_color="#D9F2FF") 
 
-        self.label_title = ctk.CTkLabel(self, text="🗣️ TraslSpeak ProMAX", font=("Arial Bold", 32), text_color="#006699")
+        self.label_title = ctk.CTkLabel(self, text="🗣️ TraslSpeak Pro", font=("Arial Bold", 32), text_color="#006699")
         self.label_title.pack(pady=(15, 5))
         
         self.frame_voice_style = ctk.CTkFrame(self, fg_color="white", corner_radius=15, border_color="#006699", border_width=1)
@@ -122,7 +122,7 @@ class HandsFreeApp(ctk.CTk):
         # CARGA DEL MODELO TURBO (El más preciso y veloz)
         self.model = WhisperModel("turbo", device="cpu", compute_type="int8")
         self.btn_accion.configure(state="normal")
-        self.update_label(self.status_usuer, "TURBO LISTO ✅", "#00AA00")
+        self.update_label(self.status_usuer, "LISTO ✅", "#00AA00")
 
     def toggle_system(self):
         if not self.is_running:
