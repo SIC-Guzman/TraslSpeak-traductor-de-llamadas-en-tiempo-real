@@ -34,7 +34,14 @@ ctk.set_default_color_theme("blue")
 
 class HandsFreeApp(ctk.CTk):
     def __init__(self):
+        # 1. INICIALIZAR AUDIO PRIMERO (Evita errores de hilos)
+        try:
+            self.p = pyaudio.PyAudio()
+        except Exception as e:
+            print(f"Error PyAudio: {e}")
+
         super().__init__()
+        
         self.CABLE_INPUT_ID = CABLE_INPUT_ID
         self.CABLE_OUTPUT_ID = CABLE_OUTPUT_ID
         self.REAL_MIC_ID = REAL_MIC_ID
@@ -47,24 +54,19 @@ class HandsFreeApp(ctk.CTk):
         self.user_volume = 0
         self.other_volume = 0
 
-        self.title("TraslSpeak Pro") 
+        self.title("TraslSpeak ProMAX - ULTRASONIC") 
         self.geometry("1200x950")
         self.configure(fg_color="#D9F2FF") 
 
-        # TÍTULO
-        self.label_title = ctk.CTkLabel(self, text="🗣️ TraslSpeak Pro", font=("Arial Bold", 32), text_color="#006699")
+        self.label_title = ctk.CTkLabel(self, text="🗣️ TraslSpeak ProMAX", font=("Arial Bold", 32), text_color="#006699")
         self.label_title.pack(pady=(15, 5))
         
-        # --- CAJA DE VOZ ÚNICA (CENTRADA V19) ---
         self.frame_voice_style = ctk.CTkFrame(self, fg_color="white", corner_radius=15, border_color="#006699", border_width=1)
         self.frame_voice_style.pack(fill="x", padx=300, pady=5)
-        
         ctk.CTkLabel(self.frame_voice_style, text="GÉNERO DE LAS VOCES:", font=("Arial Bold", 13)).pack(side="left", padx=20, pady=10)
         self.gender_global = ctk.CTkOptionMenu(self.frame_voice_style, values=["Masculino", "Femenino"], fg_color="#555555", width=150)
-        self.gender_global.set("Masculino")
-        self.gender_global.pack(side="right", padx=20, pady=10)
+        self.gender_global.set("Masculino"); self.gender_global.pack(side="right", padx=20, pady=10)
 
-        # --- CONTENEDOR PRINCIPAL (ALARGADO VERTICAL) ---
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
         self.main_container.pack(fill="both", expand=True, padx=20, pady=5)
         self.main_container.grid_columnconfigure(0, weight=1)
@@ -78,10 +80,9 @@ class HandsFreeApp(ctk.CTk):
         self.combo_user = ctk.CTkOptionMenu(self.frame_user, values=list(LANG_MAP.keys()), command=self.sync_languages_user, width=200)
         self.combo_user.set("Español"); self.combo_user.pack(pady=5)
         self.vol_meter_user = ctk.CTkProgressBar(self.frame_user, width=300, height=10); self.vol_meter_user.pack(pady=10)
-        self.status_usuer = ctk.CTkLabel(self.frame_user, text="INACTIVO", font=("Arial Bold", 14), text_color="gray"); self.status_usuer.pack()
-        self.txt_user = ctk.CTkTextbox(self.frame_user, font=("Segoe UI", 15), fg_color="#F0F8FF", corner_radius=15, wrap="word")
+        self.status_usuer = ctk.CTkLabel(self.frame_user, text="CARGANDO TURBO...", font=("Arial Bold", 14), text_color="gray"); self.status_usuer.pack()
+        self.txt_user = ctk.CTkTextbox(self.frame_user, font=("Segoe UI", 15), fg_color="#F0F8FF", corner_radius=15, wrap="word", state="disabled")
         self.txt_user.pack(fill="both", expand=True, padx=15, pady=15)
-        self.txt_user.configure(state="disabled")
 
         # PANEL RECEPTOR
         self.frame_other = ctk.CTkFrame(self.main_container, corner_radius=20, fg_color="white", border_color="#00C2E0", border_width=3)
@@ -91,11 +92,9 @@ class HandsFreeApp(ctk.CTk):
         self.combo_other.set("Inglés"); self.combo_other.pack(pady=5)
         self.vol_meter_other = ctk.CTkProgressBar(self.frame_other, width=300, height=10); self.vol_meter_other.pack(pady=10)
         self.status_other = ctk.CTkLabel(self.frame_other, text="ESPERANDO...", font=("Arial Bold", 14), text_color="gray"); self.status_other.pack()
-        self.txt_other = ctk.CTkTextbox(self.frame_other, font=("Segoe UI", 15), fg_color="#F0FFFF", corner_radius=15, wrap="word")
+        self.txt_other = ctk.CTkTextbox(self.frame_other, font=("Segoe UI", 15), fg_color="#F0FFFF", corner_radius=15, wrap="word", state="disabled")
         self.txt_other.pack(fill="both", expand=True, padx=15, pady=15)
-        self.txt_other.configure(state="disabled")
 
-        # BOTONES INFERIORES
         self.frame_controles = ctk.CTkFrame(self, height=80, fg_color="transparent")
         self.frame_controles.pack(fill="x", pady=15, padx=40, side="bottom")
         self.btn_mute = ctk.CTkButton(self.frame_controles, text="🎤 MUTE", command=self.toggle_mute, fg_color="#10B981", height=45)
@@ -120,9 +119,8 @@ class HandsFreeApp(ctk.CTk):
         self.prev_other_lang = current_val
 
     def load_model(self):
-        # --- CAMBIO A MODELO TURBO (MÁXIMA PRECISIÓN Y VELOCIDAD) ---
+        # CARGA DEL MODELO TURBO (El más preciso y veloz)
         self.model = WhisperModel("turbo", device="cpu", compute_type="int8")
-        self.p = pyaudio.PyAudio()
         self.btn_accion.configure(state="normal")
         self.update_label(self.status_usuer, "TURBO LISTO ✅", "#00AA00")
 
@@ -141,6 +139,7 @@ class HandsFreeApp(ctk.CTk):
             self.save_html_report()
 
     def thread_user_listener(self):
+        if not hasattr(self, 'p'): return
         stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, input_device_index=self.REAL_MIC_ID, frames_per_buffer=1024)
         frames = []; is_speaking = False; silence_start = None
         while self.is_running:
@@ -154,7 +153,7 @@ class HandsFreeApp(ctk.CTk):
                 elif is_speaking:
                     frames.append(data)
                     if silence_start is None: silence_start = time.time()
-                    if (time.time() - silence_start > 1.5): 
+                    if (time.time() - silence_start > 1.3): # Reducido a 1.3 para mayor velocidad
                         self.update_label(self.status_usuer, "TRADUCIENDO...", "#FF4400")
                         gender = self.gender_global.get()
                         lang_name = self.combo_other.get()
@@ -162,6 +161,7 @@ class HandsFreeApp(ctk.CTk):
                         src_code = LANG_MAP[self.combo_user.get()]["code"]
                         dest_code = LANG_MAP[lang_name]["code"]
                         self.save_audio(frames, "u.wav", 16000); frames = []; is_speaking = False
+                        
                         text = self.transcribe_audio(src_code, "u.wav")
                         if text:
                             trans = self.translate_text(text, src_code, dest_code)
@@ -172,6 +172,7 @@ class HandsFreeApp(ctk.CTk):
         stream.stop_stream(); stream.close()
 
     def thread_zoom_listener(self):
+        if not hasattr(self, 'p'): return
         stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, input_device_index=self.CABLE_OUTPUT_ID, frames_per_buffer=1024)
         frames = []; is_speaking = False; silence_start = None
         while self.is_running:
@@ -185,7 +186,7 @@ class HandsFreeApp(ctk.CTk):
                 elif is_speaking:
                     frames.append(data)
                     if silence_start is None: silence_start = time.time()
-                    if (time.time() - silence_start > 1.5):
+                    if (time.time() - silence_start > 1.3):
                         self.update_label(self.status_other, "TRADUCIENDO...", "#FF4400")
                         gender = self.gender_global.get()
                         lang_name = self.combo_user.get()
@@ -213,7 +214,7 @@ class HandsFreeApp(ctk.CTk):
 
     def transcribe_audio(self, lang, file):
         try:
-            # OPTIMIZACIÓN TURBO: beam_size=1 es suficiente para turbo y mucho más rápido
+            # Optimización Turbo: beam_size=1 es suficiente y mucho más rápido
             segments, _ = self.model.transcribe(file, language=lang, beam_size=1)
             return "".join([s.text for s in segments]).strip()
         except: return ""
@@ -239,7 +240,7 @@ class HandsFreeApp(ctk.CTk):
     def save_html_report(self):
         if not self.chat_history: return
         filename = f"Reporte_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-        html = f"<html><head><meta charset='utf-8'><style>body{{font-family:'Segoe UI',sans-serif;background-color:#f4f7f9;padding:30px;}}.container{{max-width:800px;margin:auto;background:white;padding:20px;border-radius:15px;shadow:0 4px 15px rgba(0,0,0,0.1);}}h2{{color:#006699;text-align:center;border-bottom:2px solid #D9F2FF;padding-bottom:10px;}}.msg{{margin:15px 0;padding:15px;border-radius:12px;line-height:1.5;}}.user{{background:#e3f2fd;border-left:5px solid #00A8E8;}}.other{{background:#f1f8e9;border-left:5px solid #8bc34a;}}.orig{{font-weight:bold;}}.trad{{font-style:italic;color:#555;}}</style></head><body><div class='container'><h2>📄 TraslSpeak ProMAX</h2>"
+        html = f"<html><head><meta charset='utf-8'><style>body{{font-family:'Segoe UI',sans-serif;background-color:#f4f7f9;padding:30px;}}.container{{max-width:800px;margin:auto;background:white;padding:20px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}}h2{{color:#006699;text-align:center;border-bottom:2px solid #D9F2FF;padding-bottom:10px;}}.msg{{margin:15px 0;padding:15px;border-radius:12px;line-height:1.5;}}.user{{background:#e3f2fd;border-left:5px solid #00A8E8;}}.other{{background:#f1f8e9;border-left:5px solid #8bc34a;}}.orig{{font-weight:bold;}}.trad{{font-style:italic;color:#555;}}</style></head><body><div class='container'><h2>📄 TraslSpeak ProMAX</h2>"
         for m in self.chat_history:
             cl = "user" if m['side'] == "USER" else "other"
             html += f"<div class='msg {cl}'><b>[{m['time']}] {m['side']}</b><br><div class='orig'>{m['orig']}</div><div class='trad'>{m['trad']}</div></div>"
