@@ -34,7 +34,7 @@ ctk.set_default_color_theme("blue")
 
 class HandsFreeApp(ctk.CTk):
     def __init__(self):
-        # 1. INICIALIZAR AUDIO PRIMERO (Evita errores de hilos)
+        # 1. INICIALIZAR AUDIO PRIMERO
         try:
             self.p = pyaudio.PyAudio()
         except Exception as e:
@@ -80,7 +80,7 @@ class HandsFreeApp(ctk.CTk):
         self.combo_user = ctk.CTkOptionMenu(self.frame_user, values=list(LANG_MAP.keys()), command=self.sync_languages_user, width=200)
         self.combo_user.set("Español"); self.combo_user.pack(pady=5)
         self.vol_meter_user = ctk.CTkProgressBar(self.frame_user, width=300, height=10); self.vol_meter_user.pack(pady=10)
-        self.status_usuer = ctk.CTkLabel(self.frame_user, text="CARGANDO TURBO...", font=("Arial Bold", 14), text_color="gray"); self.status_usuer.pack()
+        self.status_usuer = ctk.CTkLabel(self.frame_user, text="CARGANDO...", font=("Arial Bold", 14), text_color="gray"); self.status_usuer.pack()
         self.txt_user = ctk.CTkTextbox(self.frame_user, font=("Segoe UI", 15), fg_color="#F0F8FF", corner_radius=15, wrap="word", state="disabled")
         self.txt_user.pack(fill="both", expand=True, padx=15, pady=15)
 
@@ -119,7 +119,7 @@ class HandsFreeApp(ctk.CTk):
         self.prev_other_lang = current_val
 
     def load_model(self):
-        # CARGA DEL MODELO TURBO (El más preciso y veloz)
+        # CARGA DEL MODELO (Ajustado a turbo para balance velocidad/precisión)
         self.model = WhisperModel("turbo", device="cpu", compute_type="int8")
         self.btn_accion.configure(state="normal")
         self.update_label(self.status_usuer, "LISTO ✅", "#00AA00")
@@ -153,15 +153,19 @@ class HandsFreeApp(ctk.CTk):
                 elif is_speaking:
                     frames.append(data)
                     if silence_start is None: silence_start = time.time()
-                    if (time.time() - silence_start > 1.3): # Reducido a 1.3 para mayor velocidad
+                    if (time.time() - silence_start > 1.3): 
                         self.update_label(self.status_usuer, "TRADUCIENDO...", "#FF4400")
-                        gender = self.gender_global.get()
-                        lang_name = self.combo_other.get()
-                        dest_voice = LANG_MAP[lang_name]["voices"][gender]
-                        src_code = LANG_MAP[self.combo_user.get()]["code"]
-                        dest_code = LANG_MAP[lang_name]["code"]
-                        self.save_audio(frames, "u.wav", 16000); frames = []; is_speaking = False
                         
+                        # LEER IDIOMAS EN TIEMPO REAL (Permite cambiar sin reiniciar)
+                        current_user_lang = self.combo_user.get()
+                        current_other_lang = self.combo_other.get()
+                        gender = self.gender_global.get()
+                        
+                        src_code = LANG_MAP[current_user_lang]["code"]
+                        dest_code = LANG_MAP[current_other_lang]["code"]
+                        dest_voice = LANG_MAP[current_other_lang]["voices"][gender]
+
+                        self.save_audio(frames, "u.wav", 16000); frames = []; is_speaking = False
                         text = self.transcribe_audio(src_code, "u.wav")
                         if text:
                             trans = self.translate_text(text, src_code, dest_code)
@@ -188,11 +192,16 @@ class HandsFreeApp(ctk.CTk):
                     if silence_start is None: silence_start = time.time()
                     if (time.time() - silence_start > 1.3):
                         self.update_label(self.status_other, "TRADUCIENDO...", "#FF4400")
+                        
+                        # LEER IDIOMAS EN TIEMPO REAL (Permite cambiar sin reiniciar)
+                        current_user_lang = self.combo_user.get()
+                        current_other_lang = self.combo_other.get()
                         gender = self.gender_global.get()
-                        lang_name = self.combo_user.get()
-                        my_voice = LANG_MAP[lang_name]["voices"][gender]
-                        src_code = LANG_MAP[self.combo_other.get()]["code"]
-                        dest_code = LANG_MAP[lang_name]["code"]
+                        
+                        src_code = LANG_MAP[current_other_lang]["code"]
+                        dest_code = LANG_MAP[current_user_lang]["code"]
+                        my_voice = LANG_MAP[current_user_lang]["voices"][gender]
+
                         self.save_audio(frames, "z.wav", 16000); frames = []; is_speaking = False
                         text = self.transcribe_audio(src_code, "z.wav")
                         if text:
@@ -214,7 +223,6 @@ class HandsFreeApp(ctk.CTk):
 
     def transcribe_audio(self, lang, file):
         try:
-            # Optimización Turbo: beam_size=1 es suficiente y mucho más rápido
             segments, _ = self.model.transcribe(file, language=lang, beam_size=1)
             return "".join([s.text for s in segments]).strip()
         except: return ""
