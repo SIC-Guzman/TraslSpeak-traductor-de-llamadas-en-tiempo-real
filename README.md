@@ -1,6 +1,6 @@
 ## 🚀 TraslPeak Pro: Traductor Inteligente de Llamadas
 🌟 Nuestra Visión
-TraslPeak ProMAX es una solución avanzada de traducción de voz bidireccional en tiempo real. Está diseñado para integrarse perfectamente en plataformas de comunicación (Zoom, Meet, Teams, Discord) actuando como un intérprete invisible.
+TraslPeak Pro es una solución avanzada de traducción de voz bidireccional en tiempo real. Está diseñado para integrarse perfectamente en plataformas de comunicación (Zoom, Meet, Teams, Discord) actuando como un intérprete invisible.
 
 A diferencia de otros traductores, TraslPeak separa de forma inteligente tu voz del audio de la llamada, permitiendo que tú escuches la traducción de los demás y que ellos escuchen tu voz traducida de forma fluida y automática.
 
